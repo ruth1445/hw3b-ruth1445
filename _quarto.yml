@@ -1,0 +1,11 @@
+project:
+  type: website
+
+website:
+  title: "Ruth's DW Homework" 
+  navbar:
+    title: "Navigation"
+    right:
+      - text: "Home"
+        href: index.qmd
+

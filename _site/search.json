@@ -1,0 +1,51 @@
+[
+  {
+    "objectID": "hw3b-ruth1445/hw3b-ruth1445.html",
+    "href": "hw3b-ruth1445/hw3b-ruth1445.html",
+    "title": "hw3b-ruth1445",
+    "section": "",
+    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
+  },
+  {
+    "objectID": "hw3b-ruth1445/hw3b-ruth1445.html#quarto",
+    "href": "hw3b-ruth1445/hw3b-ruth1445.html#quarto",
+    "title": "hw3b-ruth1445",
+    "section": "",
+    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
+  },
+  {
+    "objectID": "exercise_air_quality.html",
+    "href": "exercise_air_quality.html",
+    "title": "MSDS 597 Homework 3: NYC Air Quality Dashboard",
+    "section": "",
+    "text": "pip install matplotlib seaborn pandas"
+  },
+  {
+    "objectID": "exercise_air_quality.html#question-1",
+    "href": "exercise_air_quality.html#question-1",
+    "title": "MSDS 597 Homework 3: NYC Air Quality Dashboard",
+    "section": "Question 1",
+    "text": "Question 1\nimport xml.etree.ElementTree as ET import pandas as pd\ntree = ET.parse(“air_quality.xml”) root = tree.getroot()\ndata = [] for entry in root.findall(“.//row”):\nrow = {\n    \"Unique ID\": entry.findtext(\"unique_id\", default=''),\n    \"Indicator ID\": entry.findtext(\"indicator_id\", default=''),\n    \"Name\": entry.findtext(\"name\", default=''),\n    \"Measure\": entry.findtext(\"measure\", default=''),\n    \"Measure Info\": entry.findtext(\"measure_info\", default=''),\n    \"Geo Type Name\": entry.findtext(\"geo_type_name\", default=''),\n    \"Geo Join ID\": entry.findtext(\"geo_join_id\", default=''),\n    \"Geo Place Name\": entry.findtext(\"geo_place_name\", default=''),\n    \"Time Period\": entry.findtext(\"time_period\", default=''),\n    \"Start Date\": entry.findtext(\"start_date\", default=''),\n    \"Data Value\": entry.findtext(\"data_value\", default=''),\n}\ndata.append(row)\ndf = pd.DataFrame(data)\nif not df.empty: df.to_csv(“converted_data.csv”, index=False) print(“Conversion complete! Check converted_data.csv”) else: print(“No data to write to CSV”)\nprint(“Conversion complete”)"
+  },
+  {
+    "objectID": "exercise_air_quality.html#question-2a",
+    "href": "exercise_air_quality.html#question-2a",
+    "title": "MSDS 597 Homework 3: NYC Air Quality Dashboard",
+    "section": "Question 2a",
+    "text": "Question 2a\ndf = pd.read_csv(“converted_data.csv”)\ndf_cleaned = df.dropna(subset=[‘Unique ID’, ‘Indicator ID’, ‘Name’, ‘Geo Place Name’, ‘Start Date’, ‘Data Value’])\ndf_cleaned[‘Year’] = pd.to_datetime(df_cleaned[‘Start Date’], errors=‘coerce’).dt.year\npm_annual_avg = df_cleaned[ (df_cleaned[“Name”] == “Fine particles (PM 2.5)”) & (df_cleaned[“Year”].between(2009, 2022))]\nborough_avg = pm_annual_avg.groupby([‘Geo Place Name’, ‘Year’])[‘Data Value’].mean().reset_index()\nnyc_avg = pm_annual_avg.groupby(“Year”)[“Data Value”].mean().reset_index() nyc_avg[“Geo Place Name”] = “New York City”\npm_annual_avg = pd.concat([borough_avg, nyc_avg], ignore_index=True)\npm_annual_avg.to_csv(“pm_annual_avg.csv”, index=False)\nprint(“Processed data saved as pm_annual_avg.csv”)"
+  },
+  {
+    "objectID": "exercise_air_quality.html#question-2b",
+    "href": "exercise_air_quality.html#question-2b",
+    "title": "MSDS 597 Homework 3: NYC Air Quality Dashboard",
+    "section": "Question 2b",
+    "text": "Question 2b\n\n\nCode\n%matplotlib inline\nimport pandas as pd\nimport matplotlib.pyplot as plt\nimport seaborn as sns\n\npm_annual_avg = pd.read_csv(\"pm_annual_avg.csv\")\n\nmajor_locations = [\"New York City\", \"Bronx\", \"Brooklyn\", \"Manhattan\", \"Queens\", \"Staten Island\"]\n\nfiltered_data = pm_annual_avg[pm_annual_avg[\"Geo Place Name\"].isin(major_locations)]\n\npalette = {\n    \"New York City\": \"black\",\n    \"Bronx\": \"red\",\n    \"Brooklyn\": \"blue\",\n    \"Manhattan\": \"orange\",\n    \"Queens\": \"purple\",\n    \"Staten Island\": \"pink\"\n}\n\nplt.figure(figsize=(12, 6))\n\n# Create the line plot\nsns.lineplot(\n    data=filtered_data, \n    x=\"Year\", \n    y=\"Data Value\", \n    hue=\"Geo Place Name\", \n    style=\"Geo Place Name\", \n    markers=True, \n    dashes=False, \n    palette=palette\n)\n\n# Titles and labels\nplt.title(\"Fine Particles (PM 2.5) Annual Averages\", fontsize=14)\nplt.xlabel(\"Year\", fontsize=12)\nplt.ylabel(\"Mean (mcg/m³)\", fontsize=12)\nplt.legend(title=\"Location\")\nplt.ylim(0, 15)  # Adjust the y-axis to match the original range\n\n# Show the plot\nplt.show()"
+  },
+  {
+    "objectID": "exercise_air_quality.html#question-3",
+    "href": "exercise_air_quality.html#question-3",
+    "title": "MSDS 597 Homework 3: NYC Air Quality Dashboard",
+    "section": "Question 3",
+    "text": "Question 3\ndata = pd.read_csv(“converted_data.csv”) print(data.columns)\n\n\nCode\nimport pandas as pd\nimport matplotlib.pyplot as plt\nimport seaborn as sns\n\ndf_cardiovascular = df[df[\"Name\"].str.contains(\"Cardiovascular hospitalizations due to PM2.5\", case=False, na=False) & \n                        (df[\"Geo Type Name\"] == \"Borough\")].copy()\n\ndf_respiratory = df[df[\"Name\"].str.contains(\"Respiratory hospitalizations due to PM2.5\", case=False, na=False) & \n                     (df[\"Geo Type Name\"] == \"Borough\")].copy()\n\n\ndf_cardiovascular['year'] = pd.to_datetime(df_cardiovascular['Start Date']).dt.year\ndf_respiratory['year'] = pd.to_datetime(df_respiratory['Start Date']).dt.year\n\ndf_combined = pd.concat([df_cardiovascular, df_respiratory])\n\ndf_combined.loc[:, \"Geo Type Name\"] = df_combined[\"Geo Type Name\"].fillna(\"Unknown\")\n# Merge both datasets for a combined FacetGrid approach\ndf_cardiovascular['Geo Type Name'] = \"Cardiovascular\"\ndf_respiratory['Geo Type Name'] = \"Respiratory\"\ndf_combined = pd.concat([df_cardiovascular, df_respiratory])\n\n# Define color palette for better distinction\npalette = sns.color_palette(\"husl\", df_combined['Geo Place Name'].nunique())\n\n# Create FacetGrid to show two subplots in a single structure\ng = sns.FacetGrid(df_combined, col=\"Geo Type Name\", hue=\"Geo Place Name\", palette=palette, height=6, aspect=1.5, sharex=True, sharey=False)\n\n# Map a lineplot onto the FacetGrid\ng.map(sns.lineplot, \"year\", \"Data Value\", marker=\"o\")\n\n# Add titles and labels\ng.set_axis_labels(\"Year\", \"Hospitalizations per 100,000 adults\")\ng.set_titles(col_template=\"{col_name} Hospitalizations\")\ng.add_legend(title=\"Neighborhood\", bbox_to_anchor=(1, 0.5), loc=\"center left\")\n\n# Rotate x-axis labels for better readability\nfor ax in g.axes.flat:\n    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)\n\n# Display the plot\nplt.show()\n\n\n/var/folders/qs/_lhr02x10x33snm5wyrb3s700000gn/T/ipykernel_61663/3272663569.py:40: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.\n  ax.set_xticklabels(ax.get_xticklabels(), rotation=45)\n/var/folders/qs/_lhr02x10x33snm5wyrb3s700000gn/T/ipykernel_61663/3272663569.py:40: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.\n  ax.set_xticklabels(ax.get_xticklabels(), rotation=45)\n\n\n\n\n\n\n\n\n\nprint(df_combined.columns)\nprint(df.isnull().sum())\nprint(df.head())"
+  }
+]
